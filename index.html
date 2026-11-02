@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>나의 일정</title>
-  <meta name="description" content="할일 기간 관리와 요일별 루틴 체크를 위한 개인 일정 앱" />
+  <meta name="description" content="습관 체크와 기간 할일을 관리하는 개인 일정 앱" />
   <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#1f2320" media="(prefers-color-scheme: dark)" />
   <link rel="manifest" href="manifest.json" />
@@ -14,102 +14,141 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="나의 일정" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <p class="today-label" id="todayLabel"></p>
-      <h1 id="pageTitle">할일</h1>
+  <!-- ================= 홈 ================= -->
+  <section id="homeView" class="view">
+    <header class="hdr">
+      <div class="month-wrap">
+        <button class="month" id="monthBtn" type="button"><span id="monthLabel"></span> <small>⌄</small></button>
+        <input type="date" id="datePick" aria-label="날짜 선택" />
+        <button class="today-chip" id="todayBtn" hidden>오늘</button>
+      </div>
+      <div class="hdr-right">
+        <span id="octHead" class="oct-head"></span>
+        <span class="pill" id="streakPill" title="전체 연속 달성">🔥 0</span>
+        <button class="icon-btn" id="sortBtn" aria-label="정렬 바꾸기">⇅</button>
+      </div>
+    </header>
+
+    <div class="week" id="weekStrip"></div>
+
+    <div class="tabs" id="homeTabs">
+      <button data-pane="habits"><span class="menu">☰</span>습관</button>
+      <button data-pane="tasks">할일 <span id="taskCount"></span></button>
     </div>
-    <button class="icon-btn" id="settingsBtn" aria-label="설정">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-    </button>
-  </header>
 
-  <main>
-    <!-- 할일 -->
-    <section id="tasksView" class="view">
-      <div class="chips" id="taskFilters" role="tablist">
-        <button data-filter="all">전체</button>
-        <button data-filter="today">오늘</button>
-        <button data-filter="week">이번주</button>
-        <button data-filter="nextweek">다음주</button>
-        <button data-filter="month">이번달</button>
-        <button data-filter="nextmonth">다음달</button>
-      </div>
-      <div class="subbar">
-        <span id="taskRange" class="muted"></span>
-        <label class="switch"><input type="checkbox" id="showDone" /> 완료 보기</label>
-      </div>
-      <div id="taskList" class="list"></div>
-    </section>
-
-    <!-- 루틴 -->
-    <section id="routinesView" class="view" hidden>
-      <div class="segmented" id="routineViewSeg">
-        <button data-view="day">하루 체크</button>
-        <button data-view="manage">루틴 관리</button>
+    <div class="panel">
+      <!-- 습관 -->
+      <div id="habitsPane">
+        <div class="filters">
+          <button class="f dd" id="rangeBtn">하루 ⌄</button>
+          <div class="chip-scroll" id="tagFilters"></div>
+        </div>
+        <div id="habitTable"></div>
+        <div id="cheer"></div>
       </div>
 
-      <div id="routineDay">
-        <div class="weekbar">
-          <button class="icon-btn sm" id="prevWeek" aria-label="이전 주">‹</button>
-          <div class="weekstrip" id="weekStrip"></div>
-          <button class="icon-btn sm" id="nextWeek" aria-label="다음 주">›</button>
+      <!-- 할일 -->
+      <div id="tasksPane" hidden>
+        <div class="chips" id="taskFilters">
+          <button data-filter="all">전체</button>
+          <button data-filter="today">오늘</button>
+          <button data-filter="week">이번주</button>
+          <button data-filter="nextweek">다음주</button>
+          <button data-filter="month">이번달</button>
+          <button data-filter="nextmonth">다음달</button>
         </div>
         <div class="subbar">
-          <span id="dayProgress" class="muted"></span>
-          <div class="mini-seg" id="routineSortSeg">
-            <button data-sort="group">그룹별</button>
-            <button data-sort="time">시간순</button>
-          </div>
+          <span id="taskRange" class="muted"></span>
+          <label class="switch"><input type="checkbox" id="showDone" /> 완료 보기</label>
         </div>
-        <div class="progress"><div id="dayProgressBar"></div></div>
-        <div id="routineDayList" class="list"></div>
+        <div id="taskList" class="list"></div>
       </div>
+    </div>
+  </section>
 
-      <div id="routineManage" hidden>
-        <div id="routineManageList" class="list"></div>
+  <!-- ================= 통계 ================= -->
+  <section id="statsView" class="view page" hidden>
+    <header class="page-hdr">
+      <h1>통계</h1>
+      <div class="month-nav">
+        <button class="icon-btn" id="statPrev" aria-label="이전 달">‹</button>
+        <span id="statMonth"></span>
+        <button class="icon-btn" id="statNext" aria-label="다음 달">›</button>
       </div>
-    </section>
-  </main>
+    </header>
+    <div id="statsBody"></div>
+  </section>
 
-  <button class="fab" id="fab" aria-label="추가">
-    <svg viewBox="0 0 24 24" width="26" height="26" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-  </button>
+  <!-- ================= 내정보 ================= -->
+  <section id="meView" class="view page" hidden>
+    <header class="page-hdr"><h1>내정보</h1></header>
+    <div class="me-hello" id="meHello"></div>
+    <div class="card">
+      <div class="li">🎨 화면 테마
+        <select id="themeSelect" class="li-select">
+          <option value="auto">기기 설정 따르기</option>
+          <option value="light">밝게</option>
+          <option value="dark">어둡게</option>
+        </select>
+      </div>
+      <button class="li" id="manageTagsBtn">🏷️ 태그 관리<span class="rt">›</span></button>
+    </div>
+    <div class="card">
+      <button class="li" id="exportBtn">💾 백업 파일 저장<span class="rt">.json</span></button>
+      <label class="li">📂 백업 파일 불러오기<input type="file" id="importInput" accept="application/json,.json" hidden /><span class="rt">›</span></label>
+      <button class="li" id="installBtn" hidden>📲 홈 화면에 설치<span class="rt">›</span></button>
+    </div>
+    <p class="muted small pad">데이터는 이 기기에만 저장돼요. 기기를 바꾸거나 브라우저 데이터를 지우기 전에 백업해 두세요.</p>
+    <div class="card">
+      <button class="li danger" id="resetBtn">🗑️ 모든 데이터 삭제</button>
+    </div>
+    <p class="muted small pad center">나의 일정 · v2</p>
+  </section>
+
+  <!-- ================= 공통 ================= -->
+  <button class="fab" id="fab" aria-label="추가">＋</button>
+  <div class="fab-dim" id="fabDim" hidden></div>
+  <div class="fab-menu" id="fabMenu" hidden>
+    <button class="fm" id="addHabitBtn"><span class="lb"><b>습관 추가</b>1개의 반복 할 일</span><span class="bt">✅</span></button>
+    <button class="fm" id="addGroupBtn"><span class="lb"><b>그룹 추가</b>2개 이상의 습관 묶음</span><span class="bt">📋</span></button>
+  </div>
 
   <nav class="tabbar">
-    <button data-tab="tasks">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4M7 14h6"/></svg>
-      <span>할일</span>
+    <button data-view="home">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈
     </button>
-    <button data-tab="routines">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v4h-4"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
-      <span>루틴</span>
+    <button data-view="stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 16v-4M12 16V8M16 16v-6"/></svg>통계
+    </button>
+    <button data-view="me">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>내정보
     </button>
   </nav>
 
   <!-- 할일 폼 -->
-  <dialog id="taskDialog">
-    <form method="dialog" id="taskForm">
+  <dialog id="taskDialog" class="center-dlg">
+    <form method="dialog" id="taskForm" class="dlg-form">
       <h2 id="taskFormTitle">할일 추가</h2>
       <label>제목<input name="title" required maxlength="80" placeholder="무엇을 할까요?" /></label>
-      <div class="row">
+      <div class="row2">
         <label>시작일<input type="date" name="start" required /></label>
         <label>종료일<input type="date" name="end" required /></label>
       </div>
-      <div class="quick-range">
+      <div class="quick" id="taskQuick">
         <button type="button" data-len="1">하루</button>
         <button type="button" data-len="3">3일</button>
         <button type="button" data-len="7">1주</button>
         <button type="button" data-len="14">2주</button>
         <button type="button" data-len="30">한 달</button>
       </div>
-      <fieldset>
-        <legend>색상</legend>
-        <div class="colors" id="taskColors"></div>
-      </fieldset>
+      <div class="lbl">색상</div>
+      <div class="colors" id="taskColors"></div>
       <label>메모<textarea name="memo" rows="3" maxlength="500" placeholder="선택 사항"></textarea></label>
       <p class="form-error" id="taskError"></p>
       <div class="actions">
@@ -121,57 +160,175 @@
     </form>
   </dialog>
 
-  <!-- 루틴 폼 -->
-  <dialog id="routineDialog">
-    <form method="dialog" id="routineForm">
-      <h2 id="routineFormTitle">루틴 추가</h2>
-      <label>이름<input name="title" required maxlength="60" placeholder="예: 물 한 잔 마시기" /></label>
-      <div class="row">
-        <label>시간<input type="time" name="time" /></label>
-        <label>그룹<input name="group" list="groupList" maxlength="30" placeholder="예: 아침" /></label>
-      </div>
-      <datalist id="groupList"></datalist>
-      <fieldset>
-        <legend>반복 요일</legend>
-        <div class="days" id="routineDays"></div>
-        <div class="quick-range">
-          <button type="button" data-days="0,1,2,3,4,5,6">매일</button>
-          <button type="button" data-days="1,2,3,4,5">평일</button>
-          <button type="button" data-days="0,6">주말</button>
+  <!-- 습관 폼 -->
+  <dialog id="habitDialog" class="full-dlg">
+    <form id="habitForm" class="full-form" novalidate>
+      <div class="nav"><button type="button" class="nav-btn" data-close>취소</button><b id="habitFormTitle">습관 추가하기</b><button type="submit" class="nav-btn primary-text">저장</button></div>
+      <div class="form-body">
+        <div class="lbl">습관 이름</div>
+        <div class="namerow">
+          <input class="emo-input" name="emoji" maxlength="8" placeholder="😀" aria-label="이모지" autocomplete="off" />
+          <input class="inp" name="title" maxlength="60" placeholder="예: 물 한 잔 마시기" autocomplete="off" />
         </div>
-      </fieldset>
-      <p class="form-error" id="routineError"></p>
-      <div class="actions">
-        <button type="button" class="btn danger" id="routineDelete">삭제</button>
-        <span class="spacer"></span>
-        <button type="button" class="btn ghost" data-close>취소</button>
-        <button type="submit" class="btn primary">저장</button>
+
+        <div class="card">
+          <div class="li">🔔 알림<label class="tg"><input type="checkbox" name="alarm" /><i></i></label></div>
+          <div class="li col">
+            <span>✅ 언제 할래요?</span>
+            <div class="row2 tight">
+              <input type="time" name="time" class="inp sm" aria-label="시간" />
+              <input name="cue" class="inp sm" maxlength="20" placeholder="상황 (예: 자기 전)" />
+            </div>
+          </div>
+          <p class="hint" id="alarmHint" hidden>🔔 표시만 돼요. 실제 휴대폰 알림은 앱 설치 버전에서 지원할 예정이에요.</p>
+        </div>
+
+        <div class="card">
+          <div class="li col">
+            <span>🔁 반복 주기</span>
+            <div class="seg" id="repeatSeg">
+              <button type="button" data-type="daily">매일</button>
+              <button type="button" data-type="weekly">매주</button>
+              <button type="button" data-type="monthly">매월</button>
+            </div>
+            <div id="repDaily" class="rep">
+              <div class="stepper"><button type="button" data-step="-1">−</button><b id="intervalVal">1</b>일마다<button type="button" data-step="1">＋</button></div>
+              <p class="hint">1일마다 = 매일 · 2일마다 = 이틀에 한 번</p>
+            </div>
+            <div id="repWeekly" class="rep">
+              <div class="days" id="weekDays"></div>
+              <div class="quick" id="weekQuick">
+                <button type="button" data-days="0,1,2,3,4,5,6">매일</button>
+                <button type="button" data-days="1,2,3,4,5">평일</button>
+                <button type="button" data-days="0,6">주말</button>
+              </div>
+            </div>
+            <div id="repMonthly" class="rep">
+              <div class="mgrid" id="monthDates"></div>
+              <p class="hint">31일처럼 없는 날짜는 그 달의 말일에 해요.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="li">⏱️ 타이머<label class="tg"><input type="checkbox" name="timerOn" /><i></i></label></div>
+          <div class="li" id="timerRow"><span>시간</span><div class="stepper sm"><button type="button" data-min="-5">−</button><b id="minVal">10</b>분<button type="button" data-min="5">＋</button></div></div>
+        </div>
+
+        <div class="card">
+          <div class="li col"><span>🏷️ 태그</span><div class="tagrow" id="habitTags"></div></div>
+          <div class="li" id="groupRow">📂 그룹<select name="group" class="li-select" id="groupSelect"></select></div>
+        </div>
+
+        <div class="card">
+          <div class="li col"><span>📝 메모</span><textarea name="memo" class="inp" rows="2" maxlength="300" placeholder="선택 사항"></textarea></div>
+        </div>
+
+        <p class="form-error" id="habitError"></p>
+        <button type="button" class="btn danger block" id="habitDelete">이 습관 삭제</button>
       </div>
     </form>
   </dialog>
 
-  <!-- 설정 -->
-  <dialog id="settingsDialog">
-    <div class="settings">
-      <h2>설정</h2>
-      <p class="muted small">데이터는 이 기기의 브라우저에만 저장됩니다. 기기를 바꾸거나 브라우저 데이터를 지우기 전에 백업해 두세요.</p>
-      <label>화면 테마
-        <select id="themeSelect">
-          <option value="auto">기기 설정 따르기</option>
-          <option value="light">밝게 (종이색)</option>
-          <option value="dark">어둡게 (숲색)</option>
-        </select>
-      </label>
-      <button class="btn" id="exportBtn">백업 파일 저장 (.json)</button>
-      <label class="btn file-btn">백업 파일 불러오기<input type="file" id="importInput" accept="application/json,.json" hidden /></label>
-      <button class="btn" id="installBtn" hidden>홈 화면에 설치</button>
-      <button class="btn danger" id="resetBtn">모든 데이터 삭제</button>
-      <div class="actions"><span class="spacer"></span><button class="btn ghost" data-close>닫기</button></div>
+  <!-- 그룹 폼 -->
+  <dialog id="groupDialog" class="full-dlg">
+    <form id="groupForm" class="full-form" novalidate>
+      <div class="nav"><button type="button" class="nav-btn" data-close>취소</button><b id="groupFormTitle">그룹 추가하기</b><button type="submit" class="nav-btn primary-text">저장</button></div>
+      <div class="form-body">
+        <div class="lbl">그룹 이름</div>
+        <div class="namerow">
+          <input class="emo-input" name="emoji" maxlength="8" placeholder="📋" aria-label="이모지" autocomplete="off" />
+          <input class="inp" name="name" maxlength="30" placeholder="예: 출근 전" autocomplete="off" />
+        </div>
+        <div class="card">
+          <div class="li">🔔 알림<label class="tg"><input type="checkbox" name="alarm" /><i></i></label></div>
+          <div class="li col">
+            <span>✅ 언제 할래요?</span>
+            <div class="row2 tight">
+              <input type="time" name="time" class="inp sm" aria-label="시간" />
+              <input name="cue" class="inp sm" maxlength="20" placeholder="상황 (예: 출근길)" />
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="li">⏱️ 타이머<label class="tg"><input type="checkbox" name="timer" /><i></i></label></div>
+          <div class="li">🔁 습관 목록<span class="rt" id="groupTotal"></span></div>
+          <div id="groupHabits"></div>
+          <button type="button" class="dash" id="groupAddHabit"><span class="p">＋</span>습관을 추가해서 그룹을 만들어봐요</button>
+        </div>
+        <div class="card">
+          <div class="li">🖍️ 형광펜<label class="tg"><input type="checkbox" name="hlOn" /><i></i></label></div>
+          <div id="hlBox">
+            <div class="pal" id="hlPal"></div>
+            <div class="hl-prev" id="hlPrev"><span></span><b></b><span>0/0</span></div>
+          </div>
+        </div>
+        <p class="form-error" id="groupError"></p>
+        <button type="button" class="btn danger block" id="groupDelete">그룹 삭제 (습관은 남아요)</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 습관 넣기 선택 -->
+  <dialog id="pickDialog" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <button class="sbtn" id="pickNew">✨ 새로운 습관 만들기</button>
+      <button class="sbtn" id="pickExisting">📂 기존 습관 가져오기</button>
+      <button class="sbtn ghost" data-close>닫기</button>
     </div>
   </dialog>
+
+  <!-- 기존 습관 가져오기 -->
+  <dialog id="importDialog" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <b class="sheet-title">기존 습관 가져오기</b>
+      <div id="importList" class="pick-list"></div>
+      <button class="btn primary block" id="importDone">추가</button>
+    </div>
+  </dialog>
+
+  <!-- 태그 -->
+  <dialog id="tagDialog" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <b class="sheet-title">태그</b>
+      <div class="lbl" id="tagEditLabel">새 태그</div>
+      <div class="namerow">
+        <input class="inp" id="tagName" maxlength="12" placeholder="예: 건강" autocomplete="off" />
+        <button class="btn primary" id="tagSave">추가</button>
+      </div>
+      <div class="pal tag-pal" id="tagPal"></div>
+      <div class="lbl" id="tagListLabel">내 태그</div>
+      <div id="tagList" class="pick-list"></div>
+      <button class="btn block" data-close>완료</button>
+    </div>
+  </dialog>
+
+  <!-- 습관 상세 -->
+  <dialog id="detailDialog" class="full-dlg">
+    <div class="full-form" id="detailBody"></div>
+  </dialog>
+
+  <!-- 타이머 -->
+  <div class="timer-view" id="timerView" hidden>
+    <div class="t-top"><button class="icon-btn" id="tClose" aria-label="닫기">✕</button><span id="tTitle"></span><span style="width:40px"></span></div>
+    <div class="t-steps" id="tSteps"></div>
+    <div class="t-ring" id="tRing"><div class="t-inner"><div class="t-emo" id="tEmo"></div><div class="t-name" id="tName"></div><div class="t-time" id="tTime"></div><div class="t-sub" id="tSub"></div></div></div>
+    <div class="t-ctrl">
+      <button class="cb" id="tReset" aria-label="처음부터">↺</button>
+      <button class="cb main" id="tPlay" aria-label="시작/일시정지">▶</button>
+      <button class="cb" id="tDone" aria-label="완료">✓</button>
+    </div>
+    <p class="t-hint">✓ 를 누르면 완료하고 다음으로 넘어가요</p>
+    <div class="t-next" id="tNext"></div>
+  </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="app.js"></script>
+  <script src="habits.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>

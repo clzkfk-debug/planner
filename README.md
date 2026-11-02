@@ -1,11 +1,14 @@
-# 나의 일정 (할일 & 루틴 PWA)
+# 나의 일정 (습관 & 할일 PWA)
 
 빌드 과정 없이 HTML, CSS, JS만으로 만든 앱입니다. 데이터는 기기의 브라우저(localStorage)에 저장됩니다.
 
 ## 파일
-- `index.html`, `styles.css`, `app.js`: 앱 본체
+- `index.html`, `styles.css`: 화면과 디자인
+- `app.js`: 공통 기능, 할일, 내정보(설정·백업)
+- `habits.js`: 습관, 그룹, 태그, 타이머, 통계
+- `main.js`: 화면 전환과 시작
 - `manifest.json`: 홈 화면에 설치할 때 쓰는 정보(이름, 아이콘, 색상)
-- `sw.js`: 서비스 워커(오프라인 실행용). 파일을 고쳐서 다시 배포할 때는 `CACHE` 버전을 올려 주세요(`planner-v1` → `planner-v2`).
+- `sw.js`: 서비스 워커(오프라인 실행용). 파일을 고쳐서 다시 배포할 때는 `CACHE` 버전을 올려 주세요(`planner-v2` → `planner-v3`).
 - `icons/`: 앱 아이콘
 
 ## 로컬에서 실행
