@@ -14,7 +14,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="나의 일정" />
-  <link rel="preload" href="fonts/ownglyph-pdh.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="preload" href="fonts/griun-gowoon.ttf" as="font" type="font/ttf" crossorigin />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -287,6 +287,32 @@
         <button class="icon-btn" id="calNext" aria-label="다음 달">▶</button>
       </div>
       <div class="dgrid" id="calGrid"></div>
+    </div>
+  </dialog>
+
+  <!-- 습관 눌렀을 때 -->
+  <dialog id="habitMenu" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <b class="sheet-title" id="habitMenuTitle"></b>
+      <button class="sbtn" data-m="edit">✏️ 수정하기</button>
+      <button class="sbtn" data-m="detail">📅 상세보기</button>
+      <button class="sbtn danger-text" data-m="delete">🗑️ 삭제하기</button>
+      <button class="sbtn ghost" data-close>닫기</button>
+    </div>
+  </dialog>
+
+  <!-- 이모지 고르기 -->
+  <dialog id="emojiDialog" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="cal-hdr"><b>이모지 고르기</b><span class="spacer"></span><button class="btn sm-btn" id="emojiClear">지우기</button></div>
+      <div class="chip-scroll" id="emojiCats"></div>
+      <div class="egrid" id="emojiGrid"></div>
+      <div class="namerow">
+        <input class="inp" id="emojiCustom" maxlength="8" placeholder="목록에 없으면 여기에 직접 입력" autocomplete="off" />
+        <button class="btn primary" id="emojiUse">적용</button>
+      </div>
     </div>
   </dialog>
 

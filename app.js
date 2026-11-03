@@ -144,6 +144,50 @@ function make24h(input) {
     set: v => { hs.disabled = ms.disabled = clr.disabled = !!v; wrap.classList.toggle('off', !!v); },
   });
 }
+// 이모지 고르기: 이모지 칸을 누르면 목록이 열려요
+const EMOJI_CATS = [
+  ['자주 쓴', null],
+  ['생활', '☀️ 🌅 🌙 ⭐ 🛏️ 🛌 🚿 🛁 🪥 🧴 🧺 🧹 🧼 👕 👚 👔 🧦 🏠 🚪 🔑 ⏰ ⌛ 📅 🗓️ 🚶 🚌 🚇 🚗 🚲 🛒'],
+  ['건강·운동', '💊 💉 🩺 🦷 💧 🥤 🧘 🏃 🏋️ 🤸 🚴 🏊 🧗 🥾 🎾 ⚽ 🏀 🏸 🏓 🥊 🛹 ❤️‍🩹 🧠 💪 🦵 😴 🫁 🩹 🧖 🏌️'],
+  ['음식', '🍎 🍌 🥗 🥦 🥕 🍳 🥚 🍞 🍚 🍜 🍱 🥛 ☕ 🍵 🧃 🍫 🍰 🍪 🍺 🍷 🥑 🍓 🫐 🥜 🍽️ 🥄 🍙 🍣 🍕 🥤'],
+  ['공부·일', '📚 📖 📝 ✏️ 🖊️ 📓 📒 📑 💻 🖥️ ⌨️ 📱 📧 📞 💼 🏢 📊 📈 🗂️ 📌 📎 ✅ ☑️ 🎯 🧾 💡 🔬 🎓 🗣️ 🌐'],
+  ['마음', '😊 😌 🙂 😁 🥰 😇 🤗 🙏 💖 💚 💛 💙 💜 🤍 ✨ 🌈 🍀 🌸 🌷 🌻 🕊️ 🎈 🎉 🎁 🫶 👍 👏 💯 🔥 🌟'],
+  ['취미', '🎵 🎧 🎸 🎹 🎨 🖌️ 📷 🎬 🎮 🧩 ♟️ 🧶 🪡 📺 🎤 💃 🌱 🪴 🌿 ✈️ 🧳 🗺️ 🏕️ ⛰️ 🏖️ 🛍️ 💰 💳 🪙 🎲'],
+  ['동물', '🐶 🐱 🐰 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🐔 🐧 🐦 🐤 🦆 🦉 🐴 🦄 🐝 🦋 🐢 🐙 🐬 🐳 🐠 🦊 🐹 🐾'],
+  ['기호', '✅ ❌ ⭕ ❗ ❓ ⚠️ 🚫 🔔 🔕 ⏱️ ⏳ 🔁 🔄 ➕ ✔️ 🆗 🆕 🔝 💤 💬 💭 📍 🏷️ 🔖 📦 🎀 🏆 🥇 📣 🔒'],
+];
+const ep = { target: null, cat: 1 };
+function openEmojiPicker(input) {
+  ep.target = input;
+  ep.cat = (state.ui.recentEmoji || []).length ? 0 : 1;
+  $('#emojiCustom').value = '';
+  renderEmojiPicker();
+  openDlg('emojiDialog');
+}
+function renderEmojiPicker() {
+  $('#emojiCats').innerHTML = EMOJI_CATS.map(([n], i) => `<button class="f ${i === ep.cat ? 'on' : ''}" data-cat="${i}">${n}</button>`).join('');
+  const list = ep.cat === 0 ? (state.ui.recentEmoji || []) : EMOJI_CATS[ep.cat][1].split(' ');
+  $('#emojiGrid').innerHTML = list.length ? list.map(e => `<button data-e="${e}">${e}</button>`).join('') : '<p class="muted small">아직 고른 이모지가 없어요.</p>';
+}
+function pickEmoji(e) {
+  const t = ep.target; if (!t) return;
+  t.value = e;
+  t.dispatchEvent(new Event('input', { bubbles: true }));
+  if (e) state.ui.recentEmoji = [e, ...(state.ui.recentEmoji || []).filter(x => x !== e)].slice(0, 24);
+  persist('ui');
+  closeDlg('emojiDialog');
+}
+function bindEmojiPicker() {
+  $$('.emo-input').forEach(inp => {
+    inp.readOnly = true;
+    inp.setAttribute('inputmode', 'none');
+    inp.addEventListener('click', () => openEmojiPicker(inp));
+  });
+  $('#emojiCats').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (b) { ep.cat = Number(b.dataset.cat); renderEmojiPicker(); } });
+  $('#emojiGrid').addEventListener('click', e => { const b = e.target.closest('[data-e]'); if (b) pickEmoji(b.dataset.e); });
+  $('#emojiUse').addEventListener('click', () => { const v = $('#emojiCustom').value.trim(); if (v) pickEmoji(v); });
+  $('#emojiClear').addEventListener('click', () => pickEmoji(''));
+}
 function openDlg(id) { const d = $('#' + id); if (!d.open) d.showModal(); return d; }
 function closeDlg(id) { const d = $('#' + id); if (d.open) d.close(); }
 

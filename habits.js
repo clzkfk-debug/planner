@@ -316,6 +316,22 @@ function renderHabits() {
 /* =========================================================
    습관 상세
    ========================================================= */
+let menuId = null;
+function openHabitMenu(id) {
+  const h = habitById(id); if (!h) return;
+  menuId = id;
+  $('#habitMenuTitle').textContent = `${hEmoji(h)} ${h.title}`;
+  openDlg('habitMenu');
+}
+function bindHabitMenu() {
+  $('#habitMenu').addEventListener('click', e => {
+    const b = e.target.closest('[data-m]'); if (!b) return;
+    closeDlg('habitMenu');
+    if (b.dataset.m === 'edit') openHabitForm(menuId);
+    else if (b.dataset.m === 'detail') openDetail(menuId);
+    else { hf.id = menuId; deleteHabit(); }
+  });
+}
 let detailId = null, detailMonth = null, trendSel = null;
 function openDetail(id) {
   detailId = id;

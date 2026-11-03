@@ -1,13 +1,13 @@
-/* ===== 글씨체: 온글잎 박다현체 (원본 파일 그대로 사용) ===== */
+/* ===== 글씨체: 그리운X국한박 고운 (원본 파일 그대로 사용) ===== */
 @font-face {
-  font-family: "Ownglyph PDH";
-  src: url("fonts/ownglyph-pdh.ttf") format("truetype");
+  font-family: "Griun Gowoon";
+  src: url("fonts/griun-gowoon.ttf") format("truetype");
   font-display: swap;
   /* 이모지(☀️ ❌ 등)는 휴대폰 기본 이모지로 보이도록 글씨체에서 제외 */
   unicode-range: U+0000-25FF, U+2800-1EFFF, U+1FB00-10FFFF;
 }
-/* 손글씨체는 글자가 작아 보여서 전체 크기를 조금 키움 */
-html { font-size: 17.5px; }
+/* 글씨체에 맞춘 전체 글자 크기 */
+html { font-size: 16.5px; }
 
 /* ===== 색상: 눈이 편한 종이색 + 세이지 그린 ===== */
 :root {
@@ -72,7 +72,7 @@ button:focus:not(:focus-visible), select:focus:not(:focus-visible) { outline: no
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: "Ownglyph PDH", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: "Griun Gowoon", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.45;
   min-height: 100dvh;
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
@@ -346,6 +346,13 @@ button.lt { cursor: pointer; }
 .tag .te { font-size: .9em; line-height: 1; }
 .f .te { font-size: .95em; }
 .pick .sw { display: grid; place-items: center; font-size: .75rem; }
+.egrid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; max-height: 40dvh; overflow-y: auto; }
+.egrid button { aspect-ratio: 1; border-radius: 10px; font-size: 1.55rem; display: grid; place-items: center; }
+.egrid button:active { background: var(--surface-2); }
+#emojiCats { padding-bottom: 2px; }
+#emojiCats .f { background: var(--bg); }
+#emojiCats .f.on { background: var(--text); color: var(--bg); }
+.emo-input { cursor: pointer; caret-color: transparent; }
 .cal-hdr { display: flex; align-items: center; gap: 8px; padding: 2px 2px 8px; }
 .cal-hdr b { font-size: 1.15rem; }
 .cell.r, .wc { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
@@ -451,6 +458,10 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--border); margin: 0 auto 6px; }
 .sheet-title { font-size: 1.05rem; }
 .sbtn { border: 1px solid var(--border); border-radius: 14px; height: 54px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: .98rem; background: var(--bg); }
+.sbtn.danger-text { color: #e5251b; border-color: #f3b3ad; background: #fff1ef; }
+:root[data-theme="dark"] .sbtn.danger-text { color: #ff5a4f; border-color: #6b302b; background: #3a2422; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sbtn.danger-text { color: #ff5a4f; border-color: #6b302b; background: #3a2422; } }
+.sbtn:focus { outline: none; }
 .sbtn.ghost { border: 0; background: transparent; color: var(--muted); font-weight: 400; }
 .pick-list { display: flex; flex-direction: column; max-height: 45dvh; overflow-y: auto; }
 .pick { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px solid var(--line); font-size: .95rem; text-align: left; width: 100%; }

@@ -84,7 +84,7 @@ function bindHome() {
     switch (el.dataset.act) {
       case 'fold': state.ui.collapsed[id] = !state.ui.collapsed[id]; persist('ui'); renderHabits(); break;
       case 'edit-group': openGroupForm(id); break;
-      case 'detail': openDetail(id); break;
+      case 'detail': openHabitMenu(id); break;
       case 'group-run': {
         const g = groupById(id);
         const ids = g.habitIds.map(habitById).filter(h => h && isDue(h, k) && !isDone(k, h.id) && (!state.ui.tagFilter || (h.tags || []).includes(state.ui.tagFilter))).map(h => h.id);
@@ -177,6 +177,8 @@ bindImport();
 bindTags();
 bindTimer();
 bindArchive();
+bindEmojiPicker();
+bindHabitMenu();
 bindTimeEdit();
 bindHome();
 setView(state.ui.view || 'home');
