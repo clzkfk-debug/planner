@@ -46,7 +46,11 @@ function bindHome() {
     const dx = e.changedTouches[0].clientX - sx; sx = null;
     if (Math.abs(dx) > 50) selectDate(addDaysKey(state.selDate, dx < 0 ? 7 : -7));
   });
-  $('#datePick').addEventListener('change', e => { if (e.target.value) selectDate(e.target.value); });
+  $('#monthBtn').addEventListener('click', openCal);
+  $('#calPrev').addEventListener('click', () => moveCal(-1));
+  $('#calNext').addEventListener('click', () => moveCal(1));
+  $('#calGrid').addEventListener('click', e => { const b = e.target.closest('[data-date]'); if (b) { closeDlg('calDialog'); selectDate(b.dataset.date); } });
+  $('#calToday').addEventListener('click', () => { closeDlg('calDialog'); selectDate(todayKey()); });
   $('#todayBtn').addEventListener('click', () => selectDate(todayKey()));
 
   // 보기 옵션
@@ -61,8 +65,18 @@ function bindHome() {
     state.ui.tagFilter = state.ui.tagFilter === b.dataset.tag ? null : b.dataset.tag; persist('ui'); renderHabits();
   });
 
-  // 습관 표
+  // 습관 표: 결과 칸 길게 누르면 시간 수정
+  let lpTimer = null, lpFired = false;
+  const lpCancel = () => { clearTimeout(lpTimer); lpTimer = null; };
+  $('#habitTable').addEventListener('pointerdown', e => {
+    lpFired = false;
+    const c = e.target.closest('.cell.r[data-act=result], .wc[data-date]'); if (!c) return;
+    lpTimer = setTimeout(() => { lpFired = true; openTimeEdit(c.dataset.id, c.dataset.date || state.selDate); }, 550);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel', 'scroll'].forEach(ev => $('#habitTable').addEventListener(ev, lpCancel, true));
+  $('#habitTable').addEventListener('contextmenu', e => { if (e.target.closest('.cell.r, .wc')) e.preventDefault(); });
   $('#habitTable').addEventListener('click', e => {
+    if (lpFired) { lpFired = false; e.stopPropagation(); return; }
     const wc = e.target.closest('.wc[data-date]');
     if (wc) { cycleStatus(wc.dataset.date, wc.dataset.id); renderHome(); return; }
     const el = e.target.closest('[data-act]'); if (!el) return;
@@ -102,8 +116,10 @@ function bindHome() {
   $('#addGroupBtn').addEventListener('click', () => { closeFab(); openGroupForm(); });
 
   // 통계 / 내정보
-  $('#statPrev').addEventListener('click', () => { const m = state.statMonth; state.statMonth = new Date(m.getFullYear(), m.getMonth() - 1, 1); renderStats(); });
-  $('#statNext').addEventListener('click', () => { const m = state.statMonth; state.statMonth = new Date(m.getFullYear(), m.getMonth() + 1, 1); renderStats(); });
+  $('#statPrev').addEventListener('click', () => statMove(-1));
+  $('#statNext').addEventListener('click', () => statMove(1));
+  $('#statTabs').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (b) { st.tab = b.dataset.st; renderStats(); } });
+  $('#statTags').addEventListener('click', e => { const b = e.target.closest('[data-tag]'); if (b) { st.tag = st.tag === b.dataset.tag ? null : b.dataset.tag; renderStats(); } });
   $('#manageTagsBtn').addEventListener('click', () => openTagDialog('manage'));
 
   // 다이얼로그 공통: 닫기 버튼, 바깥(배경) 누르면 닫기
@@ -115,7 +131,7 @@ function bindHome() {
   });
   $('#detailDialog').addEventListener('click', onDetailClick);
   $('#detailDialog').addEventListener('close', () => { detailId = null; });
-  $('#tagDialog').addEventListener('close', () => { if (state.ui.view === 'me') renderMe(); });
+  $('#tagDialog').addEventListener('close', () => { if (state.ui.view === 'me') renderMe(); if (state.ui.view === 'stats') renderStats(); });
 
   // 다시 앱으로 돌아오면 날짜 갱신
   let lastDay = todayKey();
@@ -151,6 +167,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 
 /* ---------- 시작 ---------- */
+$$('input[type=time]').forEach(make24h);
 applyTheme();
 bindTasks();
 bindMe();
@@ -159,5 +176,7 @@ bindGroupForm();
 bindImport();
 bindTags();
 bindTimer();
+bindArchive();
+bindTimeEdit();
 bindHome();
 setView(state.ui.view || 'home');

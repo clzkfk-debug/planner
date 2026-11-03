@@ -87,20 +87,20 @@ function newGroup(o = {}) {
   return Object.assign({ id: uid(), name: '', emoji: '', time: '', cue: '', alarm: false, timer: false, hl: 'yellow', habitIds: [], created: Date.now() }, o);
 }
 
-/* ---------- 픽셀 문어 (직접 그린 14×13 캐릭터) ---------- */
-const OCT_BASE = ['.....oooo.....', '...oooooooo...', '..oowwoooooo..', '.oowooooooooo.', '.oooooooooooo.', '.oooddooddooo.', '.oooddooddooo.', '.oppooddooppo.', '..oooooooooo..', '.oooooooooooo.', 'oo.oo.oo.oo.oo', 'o..o..oo..o..o', '.o..........o.'];
-const OCT = {
-  happy: OCT_BASE,
-  sleep: OCT_BASE.map((r, i) => i === 5 ? '.oooooooooooo.' : i === 6 ? '.oooddooddooo.' : i === 7 ? '.oppooooooppo.' : r),
-  cheer: OCT_BASE.map((r, i) => i === 0 ? 'y....oooo....y' : i === 3 ? 'yowooooooooooy' : (i >= 4 && i <= 6) ? 'o' + r.slice(1, 13) + 'o' : i === 7 ? '.oppoddddoppo.' : i === 10 ? '.o.oo.oo.oo.o.' : r),
+/* ---------- 픽셀 말 (직접 그린 14×13 캐릭터) ---------- */
+const HORSE_BASE = ['...o......o...', '..oo.mmm..oo..', '..oommmmmooo..', '..mmmmmoooo...', '.mmoooooooo...', '.mmoddooddo...', '.mmodwoodwo...', '..mpoooooop...', '...oooooooo...', '...ollllllo...', '...llnllnll...', '...lllddlll...', '....llllll....'];
+const HORSE = {
+  happy: HORSE_BASE,
+  sleep: HORSE_BASE.map((r, i) => i === 5 ? '.mmoooooooo...' : i === 6 ? '.mmoddooddo...' : r),
+  cheer: HORSE_BASE.map((r, i) => i === 0 ? 'y..o......o..y' : i === 11 ? '...llddddll...' : r),
 };
-const OCT_COL = { o: '#e0998d', w: '#fbeee9', d: '#4a3b38', p: '#c97a70', y: '#e8c46a' };
-function octSVG(kind = 'happy', px = 3) {
-  const g = OCT[kind] || OCT.happy;
+const HORSE_COL = { o: '#c9a27e', m: '#7a5a44', l: '#efdcc6', d: '#4a3b38', w: '#fbeee9', p: '#e0a093', n: '#a07a5e', y: '#e8c46a' };
+function mascot(kind = 'happy', px = 3) {
+  const g = HORSE[kind] || HORSE.happy;
   let r = '';
-  g.forEach((row, y) => [...row].forEach((c, x) => { if (OCT_COL[c]) r += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${OCT_COL[c]}"/>`; }));
+  g.forEach((row, y) => [...row].forEach((c, x) => { if (HORSE_COL[c]) r += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${HORSE_COL[c]}"/>`; }));
   let w = 14;
-  if (kind === 'sleep') { r += '<rect x="14" y="1" width="1" height="1" fill="#8a857b"/><rect x="15" y="0" width="1" height="1" fill="#8a857b"/>'; w = 16; }
+  if (kind === 'sleep') { r += '<rect x="12" y="1" width="1" height="1" fill="#8a857b"/><rect x="13" y="0" width="1" height="1" fill="#8a857b"/>'; }
   return `<svg class="oct" width="${w * px}" height="${13 * px}" viewBox="0 0 ${w} 13" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
 }
 
@@ -117,6 +117,32 @@ function applyTheme() {
   const t = state.ui.theme;
   if (t === 'auto') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', t);
+}
+// 시간 칸을 24시간 형식(시 · 분 선택)으로 바꾸기. 기존 코드처럼 input.value 로 읽고 쓸 수 있어요.
+function make24h(input) {
+  const wrap = document.createElement('div');
+  wrap.className = 't24 ' + input.className;
+  const hs = document.createElement('select'), ms = document.createElement('select');
+  hs.setAttribute('aria-label', '시'); ms.setAttribute('aria-label', '분');
+  hs.innerHTML = '<option value="">--</option>' + Array.from({ length: 24 }, (_, i) => `<option value="${pad(i)}">${pad(i)}</option>`).join('');
+  ms.innerHTML = '<option value="">--</option>' + Array.from({ length: 60 }, (_, i) => `<option value="${pad(i)}">${pad(i)}</option>`).join('');
+  const colon = document.createElement('span'); colon.textContent = ':';
+  const clr = document.createElement('button'); clr.type = 'button'; clr.className = 't24-x'; clr.textContent = '✕'; clr.setAttribute('aria-label', '시간 지우기');
+  wrap.append(hs, colon, ms, clr);
+  input.type = 'hidden';
+  input.after(wrap);
+  const fire = () => input.dispatchEvent(new Event('change', { bubbles: true }));
+  hs.addEventListener('change', () => { if (!hs.value) ms.value = ''; else if (!ms.value) ms.value = '00'; fire(); });
+  ms.addEventListener('change', () => { if (ms.value && !hs.value) hs.value = pad(new Date().getHours()); fire(); });
+  clr.addEventListener('click', () => { hs.value = ''; ms.value = ''; fire(); });
+  Object.defineProperty(input, 'value', {
+    get: () => hs.value ? `${hs.value}:${ms.value || '00'}` : '',
+    set: v => { const [h, m] = String(v || '').split(':'); hs.value = h ? pad(Number(h)) : ''; ms.value = h ? pad(Number(m || 0)) : ''; },
+  });
+  Object.defineProperty(input, 'disabled', {
+    get: () => hs.disabled,
+    set: v => { hs.disabled = ms.disabled = clr.disabled = !!v; wrap.classList.toggle('off', !!v); },
+  });
 }
 function openDlg(id) { const d = $('#' + id); if (!d.open) d.showModal(); return d; }
 function closeDlg(id) { const d = $('#' + id); if (d.open) d.close(); }
@@ -165,7 +191,7 @@ function renderTasks() {
   $('#taskRange').textContent = win ? `${fmtShort(win[0])} ~ ${fmtShort(win[1])} · ${list.length}개` : '';
   const el = $('#taskList');
   if (!list.length) {
-    el.innerHTML = `<div class="empty-state">${octSVG('happy', 4)}<strong>${state.tasks.length ? '이 기간에는 할일이 없어요' : '아직 할일이 없어요'}</strong>＋ 버튼으로 기간이 있는 할일을 추가해 보세요.</div>`;
+    el.innerHTML = `<div class="empty-state">${mascot('happy', 4)}<strong>${state.tasks.length ? '이 기간에는 할일이 없어요' : '아직 할일이 없어요'}</strong>＋ 버튼으로 기간이 있는 할일을 추가해 보세요.</div>`;
     return;
   }
   const winLen = daysBetween(win[0], win[1]) + 1;
@@ -269,8 +295,10 @@ function renderMe() {
   const h = new Date().getHours();
   const kind = h >= 22 || h < 5 ? 'sleep' : 'happy';
   const msg = h < 12 ? '좋은 아침이에요!' : h < 18 ? '오늘도 천천히, 꾸준히.' : h < 22 ? '오늘 하루도 수고했어요.' : '이제 푹 쉬어요. 내일 또 봐요.';
-  $('#meHello').innerHTML = `${octSVG(kind, 4)}<div><b>${msg}</b><span class="muted small">습관 ${state.habits.length}개 · 그룹 ${state.groups.length}개 · 할일 ${state.tasks.length}개</span></div>`;
+  $('#meHello').innerHTML = `${mascot(kind, 4)}<div><b>${msg}</b><span class="muted small">습관 ${state.habits.length}개 · 그룹 ${state.groups.length}개 · 할일 ${state.tasks.length}개</span></div>`;
   $('#themeSelect').value = state.ui.theme;
+  const n = state.habits.filter(h => h.archived).length;
+  $('#archiveCount').textContent = n ? `${n}개 ›` : '›';
 }
 function exportData() {
   const data = { app: 'planner', version: 2, exported: new Date().toISOString(),

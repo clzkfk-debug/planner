@@ -14,9 +14,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="나의 일정" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" />
+  <link rel="preload" href="fonts/ownglyph-pdh.ttf" as="font" type="font/ttf" crossorigin />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -25,8 +23,7 @@
     <header class="hdr">
       <div class="month-wrap">
         <button class="month" id="monthBtn" type="button"><span id="monthLabel"></span> <small>⌄</small></button>
-        <input type="date" id="datePick" aria-label="날짜 선택" />
-        <button class="today-chip" id="todayBtn" hidden>오늘</button>
+        <button class="today-chip" id="todayBtn">오늘</button>
       </div>
       <div class="hdr-right">
         <span id="octHead" class="oct-head"></span>
@@ -74,14 +71,18 @@
 
   <!-- ================= 통계 ================= -->
   <section id="statsView" class="view page" hidden>
-    <header class="page-hdr">
-      <h1>통계</h1>
-      <div class="month-nav">
-        <button class="icon-btn" id="statPrev" aria-label="이전 달">‹</button>
-        <span id="statMonth"></span>
-        <button class="icon-btn" id="statNext" aria-label="다음 달">›</button>
-      </div>
-    </header>
+    <header class="page-hdr"><h1>통계</h1></header>
+    <div class="stabs" id="statTabs">
+      <button data-st="month">월간</button>
+      <button data-st="week">주간</button>
+      <button data-st="light">초록불</button>
+    </div>
+    <div class="snav">
+      <button class="icon-btn" id="statPrev" aria-label="이전">◀</button>
+      <b id="statLabel"></b>
+      <button class="icon-btn" id="statNext" aria-label="다음">▶</button>
+    </div>
+    <div class="chip-scroll stat-tags" id="statTags"></div>
     <div id="statsBody"></div>
   </section>
 
@@ -98,6 +99,7 @@
         </select>
       </div>
       <button class="li" id="manageTagsBtn">🏷️ 태그 관리<span class="rt">›</span></button>
+      <button class="li" id="archiveBtn">📦 보관한 습관<span class="rt" id="archiveCount">›</span></button>
     </div>
     <div class="card">
       <button class="li" id="exportBtn">💾 백업 파일 저장<span class="rt">.json</span></button>
@@ -172,6 +174,12 @@
         </div>
 
         <div class="card">
+          <div class="li col"><span>🏷️ 태그 <small class="muted" style="font-weight:400">눌러서 달기</small></span><div class="tagrow" id="habitTags"></div></div>
+          <div class="li">🎨 색상<label class="tg"><input type="checkbox" id="colorOn" /><i></i></label></div>
+          <div class="li" id="colorBox"><div class="pal hpal" id="habitColorPal"></div></div>
+        </div>
+
+        <div class="card">
           <div class="li">🔔 알림<label class="tg"><input type="checkbox" name="alarm" /><i></i></label></div>
           <div class="li col">
             <span>✅ 언제 할래요?</span>
@@ -215,16 +223,14 @@
           <div class="li" id="timerRow"><span>시간</span><div class="stepper sm"><button type="button" data-min="-5">−</button><b id="minVal">10</b>분<button type="button" data-min="5">＋</button></div></div>
         </div>
 
-        <div class="card">
-          <div class="li col"><span>🏷️ 태그</span><div class="tagrow" id="habitTags"></div></div>
-          <div class="li" id="groupRow">📂 그룹<select name="group" class="li-select" id="groupSelect"></select></div>
-        </div>
 
         <div class="card">
           <div class="li col"><span>📝 메모</span><textarea name="memo" class="inp" rows="2" maxlength="300" placeholder="선택 사항"></textarea></div>
         </div>
 
         <p class="form-error" id="habitError"></p>
+        <button type="button" class="btn block" id="habitArchive">📦 보관하기</button>
+        <p class="hint center" id="archiveHint">보관하면 목록에서 사라지지만 지금까지의 기록과 통계는 남아요.</p>
         <button type="button" class="btn danger block" id="habitDelete">이 습관 삭제</button>
       </div>
     </form>
@@ -269,6 +275,51 @@
     </form>
   </dialog>
 
+  <!-- 지난 기간 보기 (달력) -->
+  <dialog id="calDialog" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="cal-hdr">
+        <b id="calLabel"></b>
+        <button class="today-chip" id="calToday">오늘</button>
+        <span class="spacer"></span>
+        <button class="icon-btn" id="calPrev" aria-label="이전 달">◀</button>
+        <button class="icon-btn" id="calNext" aria-label="다음 달">▶</button>
+      </div>
+      <div class="dgrid" id="calGrid"></div>
+    </div>
+  </dialog>
+
+  <!-- 완료 시간 수정 (결과 칸 길게 누르기) -->
+  <dialog id="timeDialog" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <b class="sheet-title" id="timeTitle"></b>
+      <span class="muted small" id="timeSub"></span>
+      <div class="seg" id="timeSeg">
+        <button type="button" data-s="done">✓ 완료</button>
+        <button type="button" data-s="fail">❌ 못 함</button>
+      </div>
+      <label class="lbl" for="timeInput">완료한 시간</label>
+      <input type="time" id="timeInput" class="inp" />
+      <div class="row2">
+        <button class="btn" id="timeClear">기록 지우기</button>
+        <button class="btn primary" id="timeSave">저장</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 보관한 습관 -->
+  <dialog id="archiveDialog" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <b class="sheet-title">📦 보관한 습관</b>
+      <span class="muted small">다시 꺼내면 목록에 돌아오고, 기록은 그대로 이어져요.</span>
+      <div id="archiveList" class="pick-list"></div>
+      <button class="btn block" data-close>닫기</button>
+    </div>
+  </dialog>
+
   <!-- 습관 넣기 선택 -->
   <dialog id="pickDialog" class="sheet-dlg">
     <div class="sheet">
@@ -296,6 +347,7 @@
       <b class="sheet-title">태그</b>
       <div class="lbl" id="tagEditLabel">새 태그</div>
       <div class="namerow">
+        <input class="emo-input" id="tagEmoji" maxlength="8" placeholder="🏷️" aria-label="태그 이모지" autocomplete="off" />
         <input class="inp" id="tagName" maxlength="12" placeholder="예: 건강" autocomplete="off" />
         <button class="btn primary" id="tagSave">추가</button>
       </div>

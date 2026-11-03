@@ -1,6 +1,6 @@
 /* 서비스 워커: 오프라인에서도 앱이 열리도록 앱 파일을 캐시합니다.
    파일을 수정해 배포할 때는 CACHE 버전 숫자를 올려 주세요. */
-const CACHE = 'planner-v2';
+const CACHE = 'planner-v7';
 const FONT_CACHE = 'planner-fonts';
 const ASSETS = [
   './',
@@ -9,6 +9,7 @@ const ASSETS = [
   './app.js',
   './habits.js',
   './main.js',
+  './fonts/ownglyph-pdh.ttf',
   './manifest.json',
   './icons/icon.svg',
   './icons/icon-192.png',
