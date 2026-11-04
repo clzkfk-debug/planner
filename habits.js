@@ -316,6 +316,12 @@ function renderHabits() {
 /* =========================================================
    습관 상세
    ========================================================= */
+function archiveHabit(id) {
+  const h = habitById(id); if (!h) return;
+  if (!confirm('이 습관을 보관할까요? 오늘부터 목록에서 사라지고, 기록은 남아요.')) return;
+  h.archived = todayKey();
+  persist('habits'); closeDlg('habitDialog'); renderHome(); toast('보관했어요 · 내정보에서 다시 꺼낼 수 있어요');
+}
 let menuId = null;
 function openHabitMenu(id) {
   const h = habitById(id); if (!h) return;
@@ -329,6 +335,7 @@ function bindHabitMenu() {
     closeDlg('habitMenu');
     if (b.dataset.m === 'edit') openHabitForm(menuId);
     else if (b.dataset.m === 'detail') openDetail(menuId);
+    else if (b.dataset.m === 'archive') archiveHabit(menuId);
     else { hf.id = menuId; deleteHabit(); }
   });
 }
@@ -387,7 +394,7 @@ function trendSVG(pts) {
     hits += `<circle cx="${x(i)}" cy="${y(p.v)}" r="16" class="tg-hit" data-d="trend" data-i="${i}"/>`;
   });
   const lv = pts[lastI];
-  const lastLabel = lv ? `<text x="${Math.min(x(lastI) + 2, W - R)}" y="${y(lv.v) - 10}" class="tg-val" text-anchor="end">${Math.round(lv.v * 100)}%</text>` : '';
+  const lastLabel = lv ? `<text x="${Math.min(x(lastI) + 2, W - R)}" y="${y(lv.v) - 10 < 10 ? y(lv.v) + 18 : y(lv.v) - 10}" class="tg-val" text-anchor="end">${Math.round(lv.v * 100)}%</text>` : '';
   const selLine = pts[sel] ? `<line x1="${x(sel)}" x2="${x(sel)}" y1="${T}" y2="${T + ih}" class="tg-cross"/>` : '';
   return `<svg viewBox="0 0 ${W} ${Hh}" class="trend" role="img" aria-label="주간 달성률 추이">${g}${selLine}<path d="${path}" class="tg-line"/>${dots}${lastLabel}${labels}${hits}</svg>`;
 }
@@ -410,6 +417,7 @@ function renderDetail() {
   // 추이
   const pts = weeklyTrend(h);
   const valid = pts.filter(p => p.v !== null);
+  const recCount = Object.keys(state.records).filter(kk => state.records[kk][h.id]?.s).length;
   const sel = pts[trendSel ?? pts.map(p => p.v !== null).lastIndexOf(true)];
   const selText = sel ? `${parseKey(sel.ws).getMonth() + 1}월 ${parseKey(sel.ws).getDate()}일 주 · ${sel.done}/${sel.due}번 · <b>${Math.round(sel.v * 100)}%</b>` : '';
   let btns;
@@ -432,7 +440,7 @@ function renderDetail() {
       <hr class="d-div" />
       <section>
         <div class="cal-hdr"><b>주간 달성률 추이</b><span class="spacer"></span><span class="muted small">🔥 연속 ${habitStreak(h)}일 · 최고 ${habitBest(h, first)}일</span></div>
-        ${valid.length >= 2 ? `${trendSVG(pts)}<p class="tg-read">${selText}</p>` : `<p class="muted small center" style="padding:18px 0">기록이 2주 이상 쌓이면 그래프가 그려져요.${sel ? `<br>이번 주 ${sel.done}/${sel.due}번` : ''}</p>`}
+        ${recCount >= 2 && valid.length ? `${trendSVG(pts)}<p class="tg-read">${selText}</p>` : `<p class="muted small center" style="padding:18px 0">기록이 2개 이상 쌓이면 그래프가 그려져요.</p>`}
       </section>
     </div>
     <div class="d-btns">${btns}</div>`;
@@ -545,12 +553,7 @@ function bindHabitForm() {
   const f = $('#habitForm');
   f.addEventListener('submit', saveHabit);
   $('#habitDelete').addEventListener('click', deleteHabit);
-  $('#habitArchive').addEventListener('click', () => {
-    const h = habitById(hf.id); if (!h) return;
-    if (!confirm('이 습관을 보관할까요? 오늘부터 목록에서 사라지고, 기록은 남아요.')) return;
-    h.archived = todayKey();
-    persist('habits'); closeDlg('habitDialog'); renderHome(); toast('보관했어요 · 내정보에서 다시 꺼낼 수 있어요');
-  });
+  $('#habitArchive').addEventListener('click', () => archiveHabit(hf.id));
   $('#repeatSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { hf.repeat.type = b.dataset.type; renderHabitFormParts(); } });
   $('#repDaily').addEventListener('click', e => {
     const b = e.target.closest('[data-step]'); if (!b) return;

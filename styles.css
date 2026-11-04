@@ -546,3 +546,6 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 }
 .toast.show { opacity: .95; transform: translate(-50%, 0); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.quick button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.sync-err { color: var(--danger); }
+#loginDialog .inp { min-height: 48px; }

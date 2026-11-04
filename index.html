@@ -90,6 +90,7 @@
   <section id="meView" class="view page" hidden>
     <header class="page-hdr"><h1>내정보</h1></header>
     <div class="me-hello" id="meHello"></div>
+    <div class="card" id="syncCard"></div>
     <div class="card">
       <div class="li">🎨 화면 테마
         <select id="themeSelect" class="li-select">
@@ -184,7 +185,7 @@
           <div class="li col">
             <span>✅ 언제 할래요?</span>
             <div class="row2 tight">
-              <input type="time" name="time" class="inp sm" aria-label="시간" />
+              <input type="time" name="time" class="inp sm" aria-label="시간" data-step="10" />
               <input name="cue" class="inp sm" maxlength="20" placeholder="상황 (예: 자기 전)" />
             </div>
           </div>
@@ -251,7 +252,7 @@
           <div class="li col">
             <span>✅ 언제 할래요?</span>
             <div class="row2 tight">
-              <input type="time" name="time" class="inp sm" aria-label="시간" />
+              <input type="time" name="time" class="inp sm" aria-label="시간" data-step="10" />
               <input name="cue" class="inp sm" maxlength="20" placeholder="상황 (예: 출근길)" />
             </div>
           </div>
@@ -290,6 +291,23 @@
     </div>
   </dialog>
 
+  <!-- 동기화 로그인 -->
+  <dialog id="loginDialog" class="sheet-dlg">
+    <div class="sheet">
+      <div class="grab"></div>
+      <b class="sheet-title">☁️ 동기화 로그인</b>
+      <span class="muted small">같은 이메일로 로그인하면 폰과 컴퓨터에서 같은 기록을 볼 수 있어요. 처음이면 이메일과 비밀번호(6자 이상)를 정하고 "처음이에요"를 눌러 주세요.</span>
+      <input class="inp" id="loginEmail" type="email" placeholder="이메일" autocomplete="username" inputmode="email" />
+      <input class="inp" id="loginPw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password" />
+      <p class="form-error" id="loginError"></p>
+      <div class="row2">
+        <button class="btn" id="signupBtn">처음이에요 (가입)</button>
+        <button class="btn primary" id="loginBtn">로그인</button>
+      </div>
+      <button class="sbtn ghost" id="resetBtnPw">비밀번호를 잊었어요</button>
+    </div>
+  </dialog>
+
   <!-- 습관 눌렀을 때 -->
   <dialog id="habitMenu" class="sheet-dlg">
     <div class="sheet">
@@ -297,6 +315,7 @@
       <b class="sheet-title" id="habitMenuTitle"></b>
       <button class="sbtn" data-m="edit">✏️ 수정하기</button>
       <button class="sbtn" data-m="detail">📅 상세보기</button>
+      <button class="sbtn" data-m="archive">📦 보관하기</button>
       <button class="sbtn danger-text" data-m="delete">🗑️ 삭제하기</button>
       <button class="sbtn ghost" data-close>닫기</button>
     </div>
@@ -408,5 +427,6 @@
   <script src="app.js"></script>
   <script src="habits.js"></script>
   <script src="main.js"></script>
+  <script type="module" src="sync.js"></script>
 </body>
 </html>

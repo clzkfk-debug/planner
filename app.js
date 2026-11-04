@@ -43,7 +43,8 @@ const state = {
   selDate: todayKey(),
   statMonth: null,
 };
-const persist = (...keys) => keys.forEach(k => store.save(k, state[k]));
+// 저장할 때마다 동기화(sync.js)에도 알려줘요
+const persist = (...keys) => { keys.forEach(k => store.save(k, state[k])); if (window.onPersist) window.onPersist(keys); };
 
 /* ---------- 이전 버전(루틴) 데이터 옮기기 ---------- */
 function migrateV1(routines, checks) {
@@ -125,7 +126,8 @@ function make24h(input) {
   const hs = document.createElement('select'), ms = document.createElement('select');
   hs.setAttribute('aria-label', '시'); ms.setAttribute('aria-label', '분');
   hs.innerHTML = '<option value="">--</option>' + Array.from({ length: 24 }, (_, i) => `<option value="${pad(i)}">${pad(i)}</option>`).join('');
-  ms.innerHTML = '<option value="">--</option>' + Array.from({ length: 60 }, (_, i) => `<option value="${pad(i)}">${pad(i)}</option>`).join('');
+  const step = Number(input.dataset.step) || 1;
+  ms.innerHTML = '<option value="">--</option>' + Array.from({ length: 60 / step }, (_, i) => `<option value="${pad(i * step)}">${pad(i * step)}</option>`).join('');
   const colon = document.createElement('span'); colon.textContent = ':';
   const clr = document.createElement('button'); clr.type = 'button'; clr.className = 't24-x'; clr.textContent = '✕'; clr.setAttribute('aria-label', '시간 지우기');
   wrap.append(hs, colon, ms, clr);
@@ -137,7 +139,17 @@ function make24h(input) {
   clr.addEventListener('click', () => { hs.value = ''; ms.value = ''; fire(); });
   Object.defineProperty(input, 'value', {
     get: () => hs.value ? `${hs.value}:${ms.value || '00'}` : '',
-    set: v => { const [h, m] = String(v || '').split(':'); hs.value = h ? pad(Number(h)) : ''; ms.value = h ? pad(Number(m || 0)) : ''; },
+    set: v => {
+      const [h, m] = String(v || '').split(':');
+      const mm = h ? pad(Number(m || 0)) : '';
+      // 예전에 저장한 08:25 같은 값도 그대로 보이도록 칸을 추가
+      if (mm && ![...ms.options].some(o => o.value === mm)) {
+        const opt = new Option(mm, mm);
+        const after = [...ms.options].find(o => o.value > mm);
+        ms.add(opt, after || null);
+      }
+      hs.value = h ? pad(Number(h)) : ''; ms.value = mm;
+    },
   });
   Object.defineProperty(input, 'disabled', {
     get: () => hs.disabled,
@@ -341,6 +353,7 @@ function renderMe() {
   const msg = h < 12 ? '좋은 아침이에요!' : h < 18 ? '오늘도 천천히, 꾸준히.' : h < 22 ? '오늘 하루도 수고했어요.' : '이제 푹 쉬어요. 내일 또 봐요.';
   $('#meHello').innerHTML = `${mascot(kind, 4)}<div><b>${msg}</b><span class="muted small">습관 ${state.habits.length}개 · 그룹 ${state.groups.length}개 · 할일 ${state.tasks.length}개</span></div>`;
   $('#themeSelect').value = state.ui.theme;
+  if (window.renderSyncCard) window.renderSyncCard();
   const n = state.habits.filter(h => h.archived).length;
   $('#archiveCount').textContent = n ? `${n}개 ›` : '›';
 }
